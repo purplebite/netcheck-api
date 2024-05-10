@@ -15,13 +15,13 @@ NetCheck API is now running on http://localhost:2025.
 ## Usage
 When NetCheck API is running it listens for incoming HTTP requests.Three endpoints are available:
 
-1. Ping: Used for checking the reachability of IP addresses
-2. TCP port scans: Employed to scan for open ports on specified IP addresses
+1. Ping: For checking the reachability of an IP address
+2. TCP port scan: To conduct a TCP port scan on a specific port of an IP address
 3. Access point verification: Enables the examination of available access points
 
 ### Ping Endpoint
 
-To check the status of an IP address, send a GET request to `/ping/<ip_address>` with the API key provided as a query parameter. 
+To check the reachability of an IP address, send a GET request to `/ping/<ip_address>` with the API key provided as a query parameter. 
 
 **Example Request:**
 ```
