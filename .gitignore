@@ -1,0 +1,6 @@
+venv
+mycmd.md
+test.ipynb
+*.md
+*.bash
+*.sh
