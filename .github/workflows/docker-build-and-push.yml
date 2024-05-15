@@ -49,5 +49,16 @@ jobs:
         docker buildx create --use
         # docker buildx build --load  --platform linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:${{ steps.increment_version.outputs.VERSION }}    .
         # docker push ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:${{ steps.increment_version.outputs.VERSION }}
-        docker buildx build --load  --platform linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:$VERSION    .
+        docker buildx build --load  --platform linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:$VERSION -t ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:latest    .
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:$VERSION
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api:latest
+    
+    - name: push README to Dockerhub
+      uses: christian-korneck/update-container-description-action@v1
+      env:
+        DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
+      with:
+        destination_container_repo: ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api
+        provider: dockerhub
+        readme_file: 'Readme.md'
