@@ -8,6 +8,7 @@ import sys
 app = Flask(__name__)
 
 
+
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
 DEVICE = os.environ.get('DEVICE', '')
