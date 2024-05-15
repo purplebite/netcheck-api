@@ -15,9 +15,9 @@ NetCheck API is now running on http://localhost:2025.
 ## Usage
 When NetCheck API is running it listens for incoming HTTP requests.Three endpoints are available:
 
-1. Ping: For checking the reachability of an IP address
+1. Ping: To check the reachability of an IP address
 2. TCP port scan: To conduct a TCP port scan on a specific port of an IP address
-3. Access point verification: Enables the examination of available access points
+3. Access point verification: To check the availability of access points
 
 ### Ping Endpoint
 
@@ -79,8 +79,12 @@ GET http://localhost:2025/accesspoints?api_key=123456789
 {
     "access_points": [
         {
+            "SSID": "Home",
+            "signal_strength": -22.0
+        },
+        {
             "SSID": "Guest",
-            "signal_strength": -26.0
+            "signal_strength": -43.0
         }
     ],
     "status": "success"
