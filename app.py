@@ -23,6 +23,7 @@ logging.basicConfig(
 )
 
 
+
 def filter_access_points(access_points):
     ssid_signal_map = {}
     filtered_access_points = []
