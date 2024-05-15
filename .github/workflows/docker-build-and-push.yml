@@ -61,4 +61,4 @@ jobs:
       with:
         destination_container_repo: ${{ secrets.DOCKERHUB_USERNAME }}/netcheck-api
         provider: dockerhub
-        readme_file: 'Readme.md'
+        readme_file: 'README.md'
