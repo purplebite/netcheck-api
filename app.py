@@ -12,9 +12,7 @@ app = Flask(__name__)
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
 DEVICE = os.environ.get('DEVICE', '')
-# DEBUG = os.environ.get('DEBUG', '')
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
-# DEDUPLICATE = os.environ.get('DEDUPLICATE', '').lower() == 'true'
 
 logging.basicConfig(
 
