@@ -3,16 +3,17 @@ import subprocess
 import os
 import logging
 import sys
-
+import json
 
 app = Flask(__name__)
-
 
 
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
 DEVICE = os.environ.get('DEVICE', '')
+# DEBUG = os.environ.get('DEBUG', '')
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
+# DEDUPLICATE = os.environ.get('DEDUPLICATE', '').lower() == 'true'
 
 logging.basicConfig(
 
@@ -24,38 +25,75 @@ logging.basicConfig(
 
 
 def filter_access_points(access_points):
-    ssid_signal_map = {}
-    filtered_access_points = []
-    seen_ssids = set()
+    try:
+        ssid_signal_map = {}
+        filtered_access_points = []
+        seen_ssids = set()
 
-    # Iterate through access points to find the highest signal strength for each SSID .
-    for ap in access_points:
-        ssid = ap['SSID']
-        signal_strength = ap['signal_strength']
+        # Iterate through access points to find the highest signal strength for each SSID .
+        for ap in access_points:
+            ssid = ap['SSID']
+            signal_strength = ap['signal_strength']
 
-        # Update the signal strength for the SSID if it's higher
-        if ssid not in ssid_signal_map or signal_strength > ssid_signal_map[ssid]:
-            ssid_signal_map[ssid] = signal_strength
+            # Update the signal strength for the SSID if it's higher
+            if ssid not in ssid_signal_map or signal_strength > ssid_signal_map[ssid]:
+                ssid_signal_map[ssid] = signal_strength
 
-    # Iterate through access points again to filter out entries with empty SSID and duplicates
-    for ap in access_points:
-        ssid = ap['SSID']
-        signal_strength = ap['signal_strength']
+        # Iterate through access points again to filter out entries with empty SSID and duplicates
+        for ap in access_points:
+            ssid = ap['SSID']
+            signal_strength = ap['signal_strength']
 
-        # Check if the SSID is not empty, it has the highest signal strength, and it's not a duplicate
-        if ssid != "" and signal_strength == ssid_signal_map[ssid] and ssid not in seen_ssids:
-            filtered_access_points.append(ap)
-            seen_ssids.add(ssid)
+            # Check if the SSID is not empty, it has the highest signal strength, and it's not a duplicate
+            if ssid != "" and signal_strength == ssid_signal_map[ssid] and ssid not in seen_ssids:
+                filtered_access_points.append(ap)
+                seen_ssids.add(ssid)
 
-    return filtered_access_points
+        return filtered_access_points
+    except Exception as e:
+        print(e)
+        return "error"
 
+@app.route('/speedtest', methods=['GET'])
+def speed():
+    api_key = request.args.get('api_key',"")
+
+    # Check if the API key is correct @
+    if api_key != API_KEY:
+        return jsonify({'error': 'Invalid API key'}), 401
+
+    result = subprocess.run(["speedtest-cli","--json"], capture_output=True, text=True)
+    if DEBUG:
+        print("------")
+        print(result)
+        print("------")
+
+    if result.returncode == 0:
+        # Add status key-value pair for success
+        output_data = json.loads(result.stdout)
+        if DEBUG:
+            print("------")
+            print(output_data)
+            print("------")
+        output_data["status"] = "success"
+        output_data["download_mbps"] = "{:.0f} mbps".format(output_data["download"] / 10**6 * 8)
+        output_data["upload_mbps"] = "{:.0f} mbps".format(output_data["upload"] / 10**6 * 8)
+        modified_output = json.dumps(output_data)
+    else:
+        # Add status key-value pair for error
+        modified_output = json.dumps({"status": "error"})
+
+    # return modified_output
+
+    return jsonify(json.loads(modified_output)), 200
+    
 
 
 @app.route('/ping/<ip>', methods=['GET'])
 def ping_device(ip):
     api_key = request.args.get('api_key',"")
 
-    # Check if the API key is correct
+    # Check if the API key is correct @
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
@@ -67,6 +105,8 @@ def ping_device(ip):
         return jsonify({'status': 'success'}), 200
     else:
         return jsonify({'status': 'error'}), 404
+
+
 
 @app.route('/tcp-check/<ip>/<port>', methods=['GET'])
 def tcp_check(ip, port):
