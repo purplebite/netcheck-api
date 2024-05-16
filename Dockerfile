@@ -19,5 +19,4 @@ RUN pip install --no-cache-dir Flask gunicorn speedtest-cli
 
 EXPOSE $PORT
 
-
 CMD ["/bin/sh", "-c", "gunicorn -w 4 -b 0.0.0.0:$PORT app:app"]
