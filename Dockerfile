@@ -1,15 +1,12 @@
 
 FROM python:3.8-slim
 
-RUN apt-get update && apt-get install -y netcat-openbsd iputils-ping iw && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y  netcat-openbsd iputils-ping iw curl wget gnupg1 apt-transport-https dirmngr && rm -rf /var/lib/apt/lists/*
 
 ENV API_KEY=""
 
 ENV DEVICE="wlan0"
 
-# ENV DEDUPLICATE=True
-
-# Default port
 ENV PORT=80
 
 ENV DEBUG=False
@@ -18,7 +15,7 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install --no-cache-dir Flask gunicorn
+RUN pip install --no-cache-dir Flask gunicorn speedtest-cli
 
 EXPOSE $PORT
 
