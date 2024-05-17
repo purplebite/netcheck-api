@@ -110,21 +110,17 @@ GET http://localhost:2025/speedtest?api_key=123456789
 **Example Response (Success):**
 ```json
 {
-    "bytes_received": 31593473,
-    "bytes_sent": 21651456,
-    "client": {
-       ...
-    },
-    "download": 25134202.9586848,
-    "download_mbps": "201",
-    "ping": 28.992,
-    "server": {
-        ...
-    },
-    "status": "success",
-    "timestamp": "2024-01-01T20:00:00.268022Z",
-    "upload": 16235909.308740227,
-    "upload_mbps": "130"
+  "bytes_received": 31593473,
+  "bytes_sent": 21651456,
+  "client": {},
+  "download": 25134202.9586848,
+  "download_mbps": "201",
+  "ping": 28.992,
+  "server": {},
+  "status": "success",
+  "timestamp": "2024-01-01T20:00:00.268022Z",
+  "upload": 16235909.308740227,
+  "upload_mbps": "130"
 }
 ```
 **Example Response (Error):**
