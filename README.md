@@ -18,6 +18,7 @@ When NetCheck API is running it listens for incoming HTTP requests.Three endpoin
 1. Ping: To check the reachability of an IP address
 2. TCP port scan: To conduct a TCP port scan on a specific port of an IP address
 3. Access point verification: To check the availability of access points
+4. Speedtest: To measure the available internet speed
 
 ### Ping Endpoint
 
@@ -97,9 +98,64 @@ GET http://localhost:2025/accesspoints?api_key=123456789
     "status": "error"
 }
 ```
+### Speedtest Endpoint
+
+To measure the available internet speed, send a GET request to `/speedtest` with the API key provided as a query parameter.
+
+**Example Request:**
+```
+GET http://localhost:2025/speedtest?api_key=123456789
+```
+
+**Example Response (Success):**
+```json
+{
+    "bytes_received": 31593473,
+    "bytes_sent": 21651456,
+    "client": {
+        "country": "NL",
+        "ip": "217.75.32.3/",
+        "isp": "Freedom Internet",
+        "ispdlavg": "0",
+        "isprating": "2.7",
+        "ispulavg": "0",
+        "lat": "62.3695",
+        "loggedin": "0",
+        "lon": "3.6359",
+        "rating": "0"
+    },
+    "download": 25134202.9586848,
+    "download_mbps": "201",
+    "ping": 28.992,
+    "server": {
+        "cc": "NL",
+        "country": "Netherlands",
+        "d": 17.93352100305933,
+        "host": "speedtest.ams.t-mobile.nl:8080",
+        "id": "52365",
+        "lat": "52.3667",
+        "latency": 28.992,
+        "lon": "4.9000",
+        "name": "Amsterdam",
+        "sponsor": "Odido",
+        "url": "http://speedtest.ams.t-mobile.nl:8080/speedtest/upload.php"
+    },
+    "share": null,
+    "status": "success",
+    "timestamp": "2024-01-01T20:00:00.268022Z",
+    "upload": 16235909.308740227,
+    "upload_mbps": "130"
+}
+```
+**Example Response (Error):**
+```json
+{
+    "status": "error"
+}
+```
 ## Notes
 
 - NetCheck API is designed for [Raspberry Pi](https://www.raspberrypi.com/), but works on all Linux machines
-- The easiest way to secure the exposed port is via a [Cloudflare Tunnel](https://www.reddit.com/r/selfhosted/comments/tp0nqg/cloudflare_has_added_a_web_gui_for_controlling/)
+- The easiest way to secure the exposed port is via a [Cloudflare Tunnel](https://github.com/anderspitman/awesome-tunneling)
 
 
