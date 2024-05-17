@@ -113,34 +113,14 @@ GET http://localhost:2025/speedtest?api_key=123456789
     "bytes_received": 31593473,
     "bytes_sent": 21651456,
     "client": {
-        "country": "NL",
-        "ip": "217.75.32.3",
-        "isp": "Freedom Internet",
-        "ispdlavg": "0",
-        "isprating": "2.7",
-        "ispulavg": "0",
-        "lat": "62.3695",
-        "loggedin": "0",
-        "lon": "3.6359",
-        "rating": "0"
+       ...
     },
     "download": 25134202.9586848,
     "download_mbps": "201",
     "ping": 28.992,
     "server": {
-        "cc": "NL",
-        "country": "Netherlands",
-        "d": 17.93352100305933,
-        "host": "speedtest.ams.t-mobile.nl:8080",
-        "id": "52365",
-        "lat": "52.3667",
-        "latency": 28.992,
-        "lon": "4.9000",
-        "name": "Amsterdam",
-        "sponsor": "Odido",
-        "url": "http://speedtest.ams.t-mobile.nl:8080/speedtest/upload.php"
+        ...
     },
-    "share": null,
     "status": "success",
     "timestamp": "2024-01-01T20:00:00.268022Z",
     "upload": 16235909.308740227,
