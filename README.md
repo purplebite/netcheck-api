@@ -114,7 +114,7 @@ GET http://localhost:2025/speedtest?api_key=123456789
     "bytes_sent": 21651456,
     "client": {
         "country": "NL",
-        "ip": "217.75.32.3/",
+        "ip": "217.75.32.3",
         "isp": "Freedom Internet",
         "ispdlavg": "0",
         "isprating": "2.7",
