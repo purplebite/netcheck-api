@@ -13,7 +13,7 @@ NetCheck API is now running on http://localhost:2025.
 - If the DEVICE variable is not passed during container startup, the default value is set to wlan0. If you're unsure about the device name, you can use the `ifconfig` command to find the name of the WiFi interface. To install use `sudo apt install net-tools` .
 
 ## Usage
-When NetCheck API is running it listens for incoming HTTP requests.Three endpoints are available:
+When NetCheck API is running it listens for incoming HTTP requests. Four endpoints are available:
 
 1. Ping: To check the reachability of an IP address
 2. TCP port scan: To conduct a TCP port scan on a specific port of an IP address
