@@ -75,8 +75,8 @@ def speed():
             print(output_data)
             print("------")
         output_data["status"] = "success"
-        output_data["download_mbps"] = "{:.0f} mbps".format(output_data["download"] / 10**6 * 8)
-        output_data["upload_mbps"] = "{:.0f} mbps".format(output_data["upload"] / 10**6 * 8)
+        output_data["download_mbps"] = "{:.0f}".format(output_data["download"] / 10**6 * 8)
+        output_data["upload_mbps"] = "{:.0f}".format(output_data["upload"] / 10**6 * 8)
         modified_output = json.dumps(output_data)
     else:
         # Add status key-value pair for error
