@@ -11,6 +11,8 @@ ENV PORT=80
 
 ENV DEBUG=False
 
+ENV SERVERID=False
+
 WORKDIR /app
 
 COPY . /app
