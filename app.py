@@ -12,6 +12,7 @@ API_KEY = os.environ.get('API_KEY', '')
 DEVICE = os.environ.get('DEVICE', '')
 # DEBUG = os.environ.get('DEBUG', '')
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
+SERVERID = os.environ.get('SERVERID', '').lower() == 'true'
 # DEDUPLICATE = os.environ.get('DEDUPLICATE', '').lower() == 'true'
 
 logging.basicConfig(
@@ -61,7 +62,11 @@ def speed():
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
-    result = subprocess.run(["speedtest-cli","--json"], capture_output=True, text=True)
+    if SERVERID :
+        result = subprocess.run(["speedtest-cli","--server","24161","--json"], capture_output=True, text=True)
+    else:
+        result = subprocess.run(["speedtest-cli","--json"], capture_output=True, text=True)
+        
     if DEBUG:
         print("------")
         print(result)
