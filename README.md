@@ -13,11 +13,12 @@ NetCheck API is now running on http://localhost:2025.
 - If the DEVICE variable is not passed during container startup, the default value is set to wlan0. If you're unsure about the device name, you can use the `ifconfig` command to find the name of the WiFi interface. To install use `sudo apt install net-tools` .
 
 ## Usage
-When NetCheck API is running it listens for incoming HTTP requests.Three endpoints are available:
+When NetCheck API is running it listens for incoming HTTP requests. Four endpoints are available:
 
 1. Ping: To check the reachability of an IP address
 2. TCP port scan: To conduct a TCP port scan on a specific port of an IP address
 3. Access point verification: To check the availability of access points
+4. Speedtest: To measure the available internet speed
 
 ### Ping Endpoint
 
@@ -97,9 +98,40 @@ GET http://localhost:2025/accesspoints?api_key=123456789
     "status": "error"
 }
 ```
+### Speedtest Endpoint
+
+To measure the available internet speed, send a GET request to `/speedtest` with the API key provided as a query parameter.
+
+**Example Request:**
+```
+GET http://localhost:2025/speedtest?api_key=123456789
+```
+
+**Example Response (Success):**
+```json
+{
+  "bytes_received": 31593473,
+  "bytes_sent": 21651456,
+  "client": {},
+  "download": 25134202.9586848,
+  "download_mbps": "201",
+  "ping": 28.992,
+  "server": {},
+  "status": "success",
+  "timestamp": "2024-01-01T20:00:00.268022Z",
+  "upload": 16235909.308740227,
+  "upload_mbps": "130"
+}
+```
+**Example Response (Error):**
+```json
+{
+    "status": "error"
+}
+```
 ## Notes
 
 - NetCheck API is designed for [Raspberry Pi](https://www.raspberrypi.com/), but works on all Linux machines
-- The easiest way to secure the exposed port is via a [Cloudflare Tunnel](https://www.reddit.com/r/selfhosted/comments/tp0nqg/cloudflare_has_added_a_web_gui_for_controlling/)
+- The easiest way to secure the exposed port is via a [Cloudflare Tunnel](https://github.com/anderspitman/awesome-tunneling)
 
 
