@@ -18,6 +18,8 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --no-cache-dir Flask gunicorn speedtest-cli redis celery
+RUN pip install redis celery
+
 
 EXPOSE $PORT
 
