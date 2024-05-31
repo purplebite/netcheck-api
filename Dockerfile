@@ -1,7 +1,7 @@
 
 FROM python:3.8-slim
 
-RUN apt-get update && apt-get install -y  netcat-openbsd iputils-ping iw curl wget gnupg1 apt-transport-https dirmngr redis-server && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y  netcat-openbsd iputils-ping iw curl wget gnupg1 apt-transport-https dirmngr redis-server  build-essential && rm -rf /var/lib/apt/lists/*
 
 ENV API_KEY=""
 
