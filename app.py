@@ -5,6 +5,8 @@ import logging
 import sys
 import json
 from celery import Celery
+from flask_caching import Cache
+
 
 app = Flask(__name__)
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -12,6 +14,8 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
+
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 5})
 
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
@@ -150,11 +154,17 @@ def access_points():
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
+    cached_result = cache.get('access_points')
+    if cached_result:
+        return jsonify({'status': 'success', 'access_points': cached_result}), 200
+
     try:
         result = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        cache.set('access_points', result)
         return jsonify({'status': 'success', 'access_points': result}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Error during access points scan: {str(e)}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.config['API_KEY'] = API_KEY
