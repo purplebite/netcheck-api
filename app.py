@@ -49,24 +49,26 @@ def filter_access_points(access_points):
         logging.error(str(e))
         return "error"
 
-@celery.task
-def run_speedtest(serverid):
+@celery.task(bind=True, default_retry_delay=300, max_retries=5)
+def run_speedtest(self, serverid):
     try:
-        if serverid:
-            result = subprocess.run(["speedtest-cli", "--server", "24161", "--json"], capture_output=True, text=True)
-        else:
-            result = subprocess.run(["speedtest-cli", "--json"], capture_output=True, text=True)
-        if result.returncode == 0:
-            output_data = json.loads(result.stdout)
-            output_data["status"] = "success"
-            output_data["download_mbps"] = "{:.0f}".format(output_data["download"] / 10**6 * 8)
-            output_data["upload_mbps"] = "{:.0f}".format(output_data["upload"] / 10**6 * 8)
-            return output_data
-        else:
-            return {"status": "error"}
+        command = ["speedtest-cli", "--server", "24161", "--json"] if serverid else ["speedtest-cli", "--json"]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        result.check_returncode()
+        output_data = json.loads(result.stdout)
+        output_data["status"] = "success"
+        output_data["download_mbps"] = "{:.0f}".format(output_data["download"] / 10**6 * 8)
+        output_data["upload_mbps"] = "{:.0f}".format(output_data["upload"] / 10**6 * 8)
+        return output_data
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Command error: {str(e)}")
+        raise self.retry(exc=e)
+    except subprocess.TimeoutExpired as e:
+        logging.error(f"Command timeout: {str(e)}")
+        raise self.retry(exc=e)
     except Exception as e:
-        logging.error(str(e))
-        return {"status": "error"}
+        logging.error(f"Unexpected error: {str(e)}")
+        raise self.retry(exc=e)
 
 @app.route('/speedtest', methods=['GET'])
 def speed():
@@ -74,10 +76,11 @@ def speed():
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
-    task = run_speedtest.apply_async(args=[SERVERID])
-    result = task.get()
-
-    return jsonify(result), 200
+    try:
+        result = run_speedtest.apply(args=[SERVERID], throw=True).get()
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 @app.route('/ping/<ip>', methods=['GET'])
 def ping_device(ip):
@@ -107,29 +110,39 @@ def tcp_check(ip, port):
         logging.error(str(e))
         return jsonify({'status': 'error'}), 500
 
-@celery.task
-def scan_access_points(device):
-    command = f'iw dev {device} scan | egrep "SSID|signal"'
-    scan_result = subprocess.check_output(command, universal_newlines=True, shell=True)
-    access_points = []
-    current_ap = {}
-    for line in scan_result.split('\n'):
-        try:
-            if 'SSID:' in line:
-                current_ap['SSID'] = line.split('SSID: ')[1]
-                if len(current_ap) == 2:
-                    access_points.append(current_ap.copy())
-                    current_ap = {}
-            elif 'signal:' in line:
-                current_ap['signal_strength'] = float(line.split('signal: ')[1].split(' dBm')[0])
-                if len(current_ap) == 2:
-                    access_points.append(current_ap.copy())
-                    current_ap = {}
-        except Exception as e:
-            logging.error(f"Error parsing line: {line}, Error: {str(e)}")
+@celery.task(bind=True, default_retry_delay=300, max_retries=5)
+def scan_access_points(self, device):
+    try:
+        command = f'iw dev {device} scan | egrep "SSID|signal"'
+        scan_result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=60)
+        access_points = []
+        current_ap = {}
+        for line in scan_result.split('\n'):
+            try:
+                if 'SSID:' in line:
+                    current_ap['SSID'] = line.split('SSID: ')[1]
+                    if len(current_ap) == 2:
+                        access_points.append(current_ap.copy())
+                        current_ap = {}
+                elif 'signal:' in line:
+                    current_ap['signal_strength'] = float(line.split('signal: ')[1].split(' dBm')[0])
+                    if len(current_ap) == 2:
+                        access_points.append(current_ap.copy())
+                        current_ap = {}
+            except Exception as e:
+                logging.error(f"Error parsing line: {line}, Error: {str(e)}")
 
-    filtered_access_points = filter_access_points(access_points)
-    return filtered_access_points
+        filtered_access_points = filter_access_points(access_points)
+        return filtered_access_points
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Command error: {str(e)}")
+        raise self.retry(exc=e)
+    except subprocess.TimeoutExpired as e:
+        logging.error(f"Command timeout: {str(e)}")
+        raise self.retry(exc=e)
+    except Exception as e:
+        logging.error(f"Unexpected error: {str(e)}")
+        raise self.retry(exc=e)
 
 @app.route('/accesspoints', methods=['GET'])
 def access_points():
@@ -137,10 +150,11 @@ def access_points():
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
-    task = scan_access_points.apply_async(args=[DEVICE])
-    result = task.get()
-
-    return jsonify({'status': 'success', 'access_points': result}), 200
+    try:
+        result = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        return jsonify({'status': 'success', 'access_points': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.config['API_KEY'] = API_KEY
