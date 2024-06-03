@@ -19,6 +19,7 @@ cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT':
 
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
+SERVER_ID = os.environ.get('SERVER_ID', '')
 DEVICE = os.environ.get('DEVICE', '')
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
 SERVERID = os.environ.get('SERVERID', '').lower() == 'true'
@@ -56,7 +57,7 @@ def filter_access_points(access_points):
 @celery.task(bind=True, default_retry_delay=300, max_retries=5)
 def run_speedtest(self, serverid):
     try:
-        command = ["speedtest-cli", "--server", "24161", "--json"] if serverid else ["speedtest-cli", "--json"]
+        command = ["speedtest-cli", "--server", f'{SERVER_ID}', "--json"] if serverid else ["speedtest-cli", "--json"]
         result = subprocess.run(command, capture_output=True, text=True, timeout=60)
         result.check_returncode()
         output_data = json.loads(result.stdout)
