@@ -129,6 +129,11 @@ GET http://localhost:2025/speedtest?api_key=123456789
     "status": "error"
 }
 ```
+
+An optional environment parameter for the Speedtest endpoint via docker is: SERVERID. With this parameter you can define which [server](https://www.google.com/search?q=How+to+find+a+Speedtest.net+server+ID) should be used for testing the internet bandwidth. Usage example:
+```bash
+docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SERVERID=19035 --network host --restart=always purplebite/netcheck-api:latest
+```
 ## Notes
 
 - NetCheck API is designed for [Raspberry Pi](https://www.raspberrypi.com/), but works on all Linux machines
