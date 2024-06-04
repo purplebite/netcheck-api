@@ -130,7 +130,7 @@ GET http://localhost:2025/speedtest?api_key=123456789
 }
 ```
 
-An optional environment parameter for the Speedtest endpoint via docker is: SERVERID. With this parameter you can define which [server](https://www.google.com/search?q=How+to+find+a+Speedtest.net+server+ID) should be used for testing the internet bandwidth. Usage example:
+An optional environment parameter for the Speedtest endpoint via docker is: SERVER_ID. With this parameter you can define which [server](https://www.google.com/search?q=How+to+find+a+Speedtest.net+server+ID) should be used for testing the internet bandwidth. By default a test-server located in New York (US) is used. Usage example:
 ```bash
 docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SERVER_ID=19035 --network host --restart=always purplebite/netcheck-api:latest
 ```
