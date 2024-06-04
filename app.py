@@ -22,7 +22,7 @@ API_KEY = os.environ.get('API_KEY', '')
 SERVER_ID = os.environ.get('SERVER_ID', '')
 DEVICE = os.environ.get('DEVICE', '')
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
-SERVERID = os.environ.get('SERVERID', '').lower() == 'true'
+# SERVERID = os.environ.get('SERVERID', '').lower() == 'true'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -82,7 +82,7 @@ def speed():
         return jsonify({'error': 'Invalid API key'}), 401
 
     try:
-        result = run_speedtest.apply(args=[SERVERID], throw=True).get()
+        result = run_speedtest.apply(args=[SERVER_ID], throw=True).get()
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
