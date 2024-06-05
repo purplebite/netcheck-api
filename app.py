@@ -131,11 +131,41 @@ def tcp_check(ip, port):
         logging.error(str(e))
         return jsonify({'status': 'error'}), 500
 
+
 @celery.task(bind=True, default_retry_delay=300, max_retries=5)
 def scan_access_points(self, device):
-    try:
+    def run_scan():
         command = f'iw dev {device} scan | egrep "SSID|signal"'
-        scan_result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
+        retries = 5
+        initial_delay = 2  # initial delay in seconds
+        delay = initial_delay
+        resource_busy_error_code = 16  # Error code for "Device or resource busy"
+
+        for attempt in range(retries):
+            try:
+                result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
+                return result
+            except subprocess.CalledProcessError as e:
+                error_message = e.output
+                logging.error(f"Attempt {attempt + 1}: Command error: {error_message}")
+                if "Device or resource busy" in error_message:
+                    logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
+                    return 'busy'
+                else:
+                    raise e
+            except subprocess.TimeoutExpired as e:
+                logging.error(f"Attempt {attempt + 1}: Command timeout: {str(e)}")
+                raise e
+
+            if attempt < retries - 1:
+                logging.info(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+                delay *= 2  # exponential backoff
+            else:
+                raise Exception(f"Failed to execute command after {retries} attempts")
+
+    try:
+        scan_result = run_scan()
         access_points = []
         current_ap = {}
         for line in scan_result.split('\n'):
@@ -177,6 +207,8 @@ def access_points():
 
     try:
         result = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        if result == 'busy':
+            return jsonify({'status': 'busy'}), 200
         cache.set('access_points', result)
         return jsonify({'status': 'success', 'access_points': result}), 200
     except Exception as e:
