@@ -152,10 +152,10 @@ def scan_access_points(self, device):
                     logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
                     return 'busy'
                 else:
-                    raise e
+                    return 'error'
             except subprocess.TimeoutExpired as e:
                 logging.error(f"Attempt {attempt + 1}: Command timeout: {str(e)}")
-                raise e
+                return 'error'
 
             if attempt < retries - 1:
                 logging.info(f"Retrying in {delay} seconds...")
@@ -209,6 +209,8 @@ def access_points():
         result = scan_access_points.apply(args=[DEVICE], throw=True).get()
         if result == 'busy':
             return jsonify({'status': 'busy'}), 200
+        if result == 'error':
+            return jsonify({'status': 'error'}), 200
         cache.set('access_points', result)
         return jsonify({'status': 'success', 'access_points': result}), 200
     except Exception as e:
