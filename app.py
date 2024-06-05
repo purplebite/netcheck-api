@@ -87,13 +87,29 @@ def speed():
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
+@celery.task(bind=True, default_retry_delay=300, max_retries=5)
+def run_ping(self, ip):
+    try:
+        
+        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return result
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Command error: {str(e)}")
+        raise self.retry(exc=e)
+    except subprocess.TimeoutExpired as e:
+        logging.error(f"Command timeout: {str(e)}")
+        raise self.retry(exc=e)
+    except Exception as e:
+        logging.error(f"Unexpected error: {str(e)}")
+        raise self.retry(exc=e)
+
 @app.route('/ping/<ip>', methods=['GET'])
 def ping_device(ip):
     api_key = request.args.get('api_key', "")
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
 
-    response = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    response = run_ping.apply(args=[ip], throw=True).get()
     if response.returncode == 0:
         return jsonify({'status': 'success'}), 200
     else:
