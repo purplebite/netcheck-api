@@ -135,7 +135,7 @@ def tcp_check(ip, port):
 def scan_access_points(self, device):
     try:
         command = f'iw dev {device} scan | egrep "SSID|signal"'
-        scan_result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=60)
+        scan_result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
         access_points = []
         current_ap = {}
         for line in scan_result.split('\n'):
