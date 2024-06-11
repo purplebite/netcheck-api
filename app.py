@@ -6,7 +6,7 @@ import sys
 import json
 from celery import Celery
 from flask_caching import Cache
-
+from ping3 import ping
 
 app = Flask(__name__)
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -87,22 +87,45 @@ def speed():
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
+# @celery.task(bind=True, default_retry_delay=300, max_retries=5)
+# def run_ping(self, ip):
+#     try:
+#         result = subprocess.run(['ping', '-c', '1', ip], capture_output=True, text=True)
+#         if result.returncode == 0:
+#             # Extract the ping response time from the output
+#             output = result.stdout
+#             # Example output: "64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=14.2 ms"
+#             # Extract the time value from the output
+#             time_line = next(line for line in output.split('\n') if 'time=' in line)
+#             response_time = time_line.split('time=')[1].split()[0]
+#             return {'status': 'success', 'response_time': response_time}
+#         else:
+#             return {'status': 'error'}
+#     except subprocess.CalledProcessError as e:
+#         logging.error(f"Command error: {str(e)}")
+#         raise self.retry(exc=e)
+#     except subprocess.TimeoutExpired as e:
+#         logging.error(f"Command timeout: {str(e)}")
+#         raise self.retry(exc=e)
+#     except Exception as e:
+#         logging.error(f"Unexpected error: {str(e)}")
+#         raise self.retry(exc=e)
+
+
 @celery.task(bind=True, default_retry_delay=300, max_retries=5)
 def run_ping(self, ip):
     try:
-        
-        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return result
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Command error: {str(e)}")
-        raise self.retry(exc=e)
-    except subprocess.TimeoutExpired as e:
-        logging.error(f"Command timeout: {str(e)}")
-        raise self.retry(exc=e)
+        response_time = ping(ip, timeout=1)
+        if response_time is not None:
+            # Convert response time to milliseconds and format to 2-3 decimal places
+            response_time_ms = round(response_time * 1000, 2)
+            return {'status': 'success', 'response_time': f'{response_time_ms} ms'}
+        else:
+            return {'status': 'error'}
     except Exception as e:
-        logging.error(f"Unexpected error: {str(e)}")
+        logging.error(f"Ping error: {str(e)}")
         raise self.retry(exc=e)
-
+    
 @app.route('/ping/<ip>', methods=['GET'])
 def ping_device(ip):
     api_key = request.args.get('api_key', "")
@@ -110,8 +133,8 @@ def ping_device(ip):
         return jsonify({'error': 'Invalid API key'}), 401
 
     response = run_ping.apply(args=[ip], throw=True).get()
-    if response.returncode == 0:
-        return jsonify({'status': 'success'}), 200
+    if response['status'] == 'success':
+        return jsonify({'status': 'success', 'response_time': response['response_time']}), 200
     else:
         return jsonify({'status': 'error'}), 404
 
