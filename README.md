@@ -32,7 +32,8 @@ GET http://localhost:2025/ping/192.168.1.1?api_key=123456789
 **Example Response (Success):**
 ```json
 {
-    "status": "success"
+  "response_time": "422.86 ms",
+  "status": "success"
 }
 ```
 
