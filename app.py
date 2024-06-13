@@ -7,6 +7,9 @@ import json
 from celery import Celery
 from flask_caching import Cache
 from ping3 import ping
+from multiprocessing import Lock
+
+
 
 app = Flask(__name__)
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -16,7 +19,8 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 40})
-
+scan_lock = Lock()
+ping_lock = Lock()
 # Read API_KEY from environment variable
 API_KEY = os.environ.get('API_KEY', '')
 SERVER_ID = os.environ.get('SERVER_ID', '')
@@ -89,18 +93,21 @@ def speed():
 
 @celery.task(bind=True, default_retry_delay=300, max_retries=5)
 def run_ping(self, ip):
+
     try:
-        result = subprocess.run(['ping', '-c', '1', ip], capture_output=True, text=True)
-        if result.returncode == 0:
-            # Extract the ping response time from the output
-            output = result.stdout
-            # Example output: "64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=14.2 ms"
-            # Extract the time value from the output
-            time_line = next(line for line in output.split('\n') if 'time=' in line)
-            response_time = time_line.split('time=')[1].split()[0]
-            return {'status': 'success', 'response_time': response_time}
-        else:
-            return {'status': 'error'}
+        with ping_lock:  # Acquire ping_lock
+
+            result = subprocess.run(['ping', '-c', '1', ip], capture_output=True, text=True)
+            if result.returncode == 0:
+                # Extract the ping response time from the output
+                output = result.stdout
+                # Example output: "64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=14.2 ms"
+                # Extract the time value from the output
+                time_line = next(line for line in output.split('\n') if 'time=' in line)
+                response_time = time_line.split('time=')[1].split()[0]
+                return {'status': 'success', 'response_time': response_time}
+            else:
+                return {'status': 'error'}
     except subprocess.CalledProcessError as e:
         logging.error(f"Command error: {str(e)}")
         raise self.retry(exc=e)
@@ -108,7 +115,7 @@ def run_ping(self, ip):
         logging.error(f"Command timeout: {str(e)}")
         raise self.retry(exc=e)
     except Exception as e:
-        logging.error(f"Unexpected error: {str(e)}")
+        logging.error(f"Error in run_ping: {str(e)}")
         raise self.retry(exc=e)
 
 
@@ -155,37 +162,105 @@ def tcp_check(ip, port):
         return jsonify({'status': 'error'}), 500
 
 
+# @celery.task(bind=True, default_retry_delay=300, max_retries=5)
+# def scan_access_points(self, device):
+#     def run_scan():
+#         command = f'iw dev {device} scan | egrep "SSID|signal"'
+#         retries = 5
+#         initial_delay = 2  # initial delay in seconds
+#         delay = initial_delay
+#         resource_busy_error_code = 16  # Error code for "Device or resource busy"
+
+#         for attempt in range(retries):
+#             try:
+#                 result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
+#                 return result
+#             except subprocess.CalledProcessError as e:
+#                 error_message = e.output
+#                 logging.error(f"Attempt {attempt + 1}: Command error: {error_message}")
+#                 if "Device or resource busy" in error_message:
+#                     logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
+#                     return 'busy'
+#                 else:
+#                     return 'error'
+#             except subprocess.TimeoutExpired as e:
+#                 logging.error(f"Attempt {attempt + 1}: Command timeout: {str(e)}")
+#                 return 'error'
+
+#             if attempt < retries - 1:
+#                 logging.info(f"Retrying in {delay} seconds...")
+#                 time.sleep(delay)
+#                 delay *= 2  # exponential backoff
+#             else:
+#                 raise Exception(f"Failed to execute command after {retries} attempts")
+
+#     try:
+#         scan_result = run_scan()
+#         access_points = []
+#         current_ap = {}
+#         for line in scan_result.split('\n'):
+#             try:
+#                 if 'SSID:' in line:
+#                     current_ap['SSID'] = line.split('SSID: ')[1]
+#                     if len(current_ap) == 2:
+#                         access_points.append(current_ap.copy())
+#                         current_ap = {}
+#                 elif 'signal:' in line:
+#                     current_ap['signal_strength'] = float(line.split('signal: ')[1].split(' dBm')[0])
+#                     if len(current_ap) == 2:
+#                         access_points.append(current_ap.copy())
+#                         current_ap = {}
+#             except Exception as e:
+#                 logging.error(f"Error parsing line: {line}, Error: {str(e)}")
+
+#         filtered_access_points = filter_access_points(access_points)
+#         return filtered_access_points
+#     except subprocess.CalledProcessError as e:
+#         logging.error(f"Command error: {str(e)}")
+#         raise self.retry(exc=e)
+#     except subprocess.TimeoutExpired as e:
+#         logging.error(f"Command timeout: {str(e)}")
+#         raise self.retry(exc=e)
+#     except Exception as e:
+#         logging.error(f"Unexpected error: {str(e)}")
+#         raise self.retry(exc=e)
+
+
+# Global lock instance
+
+
 @celery.task(bind=True, default_retry_delay=300, max_retries=5)
 def scan_access_points(self, device):
     def run_scan():
-        command = f'iw dev {device} scan | egrep "SSID|signal"'
-        retries = 5
-        initial_delay = 2  # initial delay in seconds
-        delay = initial_delay
-        resource_busy_error_code = 16  # Error code for "Device or resource busy"
+        with scan_lock:  # Acquire the lock
+            command = f'iw dev {device} scan | egrep "SSID|signal"'
+            retries = 5
+            initial_delay = 2  # initial delay in seconds
+            delay = initial_delay
+            resource_busy_error_code = 16  # Error code for "Device or resource busy"
 
-        for attempt in range(retries):
-            try:
-                result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
-                return result
-            except subprocess.CalledProcessError as e:
-                error_message = e.output
-                logging.error(f"Attempt {attempt + 1}: Command error: {error_message}")
-                if "Device or resource busy" in error_message:
-                    logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
-                    return 'busy'
-                else:
+            for attempt in range(retries):
+                try:
+                    result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
+                    return result
+                except subprocess.CalledProcessError as e:
+                    error_message = e.output
+                    logging.error(f"Attempt {attempt + 1}: Command error: {error_message}")
+                    if "Device or resource busy" in error_message:
+                        logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
+                        return 'busy'
+                    else:
+                        return 'error'
+                except subprocess.TimeoutExpired as e:
+                    logging.error(f"Attempt {attempt + 1}: Command timeout: {str(e)}")
                     return 'error'
-            except subprocess.TimeoutExpired as e:
-                logging.error(f"Attempt {attempt + 1}: Command timeout: {str(e)}")
-                return 'error'
 
-            if attempt < retries - 1:
-                logging.info(f"Retrying in {delay} seconds...")
-                time.sleep(delay)
-                delay *= 2  # exponential backoff
-            else:
-                raise Exception(f"Failed to execute command after {retries} attempts")
+                if attempt < retries - 1:
+                    logging.info(f"Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                    delay *= 2  # exponential backoff
+                else:
+                    raise Exception(f"Failed to execute command after {retries} attempts")
 
     try:
         scan_result = run_scan()
@@ -217,6 +292,7 @@ def scan_access_points(self, device):
     except Exception as e:
         logging.error(f"Unexpected error: {str(e)}")
         raise self.retry(exc=e)
+
 
 @app.route('/accesspoints', methods=['GET'])
 def access_points():
