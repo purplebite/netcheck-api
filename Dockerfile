@@ -25,3 +25,4 @@ EXPOSE $PORT
 
 
 CMD ["/bin/sh", "-c", "gunicorn -w 4 -b 0.0.0.0:$PORT  --timeout 120 app:app & redis-server --daemonize yes & celery -A app.celery worker --loglevel=info"]
+# gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 aa2:app

@@ -6,7 +6,7 @@ import sys
 import json
 from celery import Celery
 from flask_caching import Cache
-from ping3 import ping
+# from ping3 import ping
 from multiprocessing import Lock
 
 
