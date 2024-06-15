@@ -105,6 +105,7 @@ def run_ping(self, ip):
                 # Extract the time value from the output
                 time_line = next(line for line in output.split('\n') if 'time=' in line)
                 response_time = time_line.split('time=')[1].split()[0]
+                response_time = int(float(response_time))
                 return {'status': 'success', 'response_time': response_time}
             else:
                 return {'status': 'error'}
