@@ -18,7 +18,7 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 40})
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': None})
 scan_lock = Lock()
 ping_lock = Lock()
 # Read API_KEY from environment variable
@@ -234,6 +234,29 @@ def access_points():
     except Exception as e:
         logging.error(f"Error during access points scan: {str(e)}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
+
+@app.route('/set_accesspoints', methods=['GET'])
+def access_points():
+    api_key = request.args.get('api_key', '')
+    if api_key != API_KEY:
+        return jsonify({'error': 'Invalid API key'}), 401
+
+    
+    try:
+        result = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        if result == 'busy':
+            return jsonify({'status': 'busy'}), 200
+        if result == 'error':
+            return jsonify({'status': 'error'}), 200
+        if result == [] :
+            return jsonify({'status': 'error'}), 200
+        
+        cache.set('access_points', result)
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        logging.error(f"Error during access points scan: {str(e)}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.config['API_KEY'] = API_KEY
