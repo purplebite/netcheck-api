@@ -18,7 +18,7 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': None})
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 0})
 scan_lock = Lock()
 ping_lock = Lock()
 # Read API_KEY from environment variable
@@ -36,6 +36,7 @@ logging.basicConfig(
 
 def filter_access_points(access_points):
     try:
+        print("1 \n")
         ssid_signal_map = {}
         filtered_access_points = []
         seen_ssids = set()
@@ -52,7 +53,7 @@ def filter_access_points(access_points):
             if ssid != "" and signal_strength == ssid_signal_map[ssid] and ssid not in seen_ssids:
                 filtered_access_points.append(ap)
                 seen_ssids.add(ssid)
-
+        print("1 \n")
         return filtered_access_points
     except Exception as e:
         logging.error(str(e))
@@ -229,14 +230,14 @@ def access_points():
             return jsonify({'status': 'busy'}), 200
         if result == 'error':
             return jsonify({'status': 'error'}), 200
-        cache.set('access_points', result)
+        cache.set('access_points', result, timeout=None)
         return jsonify({'status': 'success', 'access_points': result}), 200
     except Exception as e:
         logging.error(f"Error during access points scan: {str(e)}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 @app.route('/set_accesspoints', methods=['GET'])
-def access_points():
+def set_accesspoints():
     api_key = request.args.get('api_key', '')
     if api_key != API_KEY:
         return jsonify({'error': 'Invalid API key'}), 401
@@ -251,7 +252,7 @@ def access_points():
         if result == [] :
             return jsonify({'status': 'error'}), 200
         
-        cache.set('access_points', result)
+        cache.set('access_points', result, timeout=None)
         return jsonify({'status': 'success'}), 200
     except Exception as e:
         logging.error(f"Error during access points scan: {str(e)}")

@@ -4,7 +4,7 @@
 PORT=${PORT:-80}
 
 # Create a cron job that runs every minute
-echo "* * * * * root curl http://127.0.0.1:$PORT/set_accesspoints >> /var/log/cron.log 2>&1" > /etc/cron.d/mycron
+echo "* * * * * root curl http://127.0.0.1:$PORT/set_accesspoints?api_key=${API_KEY} >> /var/log/cron.log 2>&1" > /etc/cron.d/mycron
 
 # Give execution rights on the cron job
 chmod 0644 /etc/cron.d/mycron
