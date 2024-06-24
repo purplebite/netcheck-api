@@ -16,4 +16,4 @@ chmod 0644 /etc/cron.d/mycron
 crontab /etc/cron.d/mycron
 
 # Start cron in the foreground (useful for Docker)
-cron -f
+cron 

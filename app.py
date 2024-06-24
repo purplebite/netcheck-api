@@ -15,10 +15,18 @@ app = Flask(__name__)
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_PORT'] = 6379
+app.config['CACHE_REDIS_DB'] = 0
+app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
+
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 0})
+# cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 1200})
+cache = Cache(app)
+
 scan_lock = Lock()
 ping_lock = Lock()
 # Read API_KEY from environment variable
@@ -221,20 +229,11 @@ def access_points():
         return jsonify({'error': 'Invalid API key'}), 401
 
     cached_result = cache.get('access_points')
-    if cached_result:
+    print(cached_result)
+    if cached_result is not None :
         return jsonify({'status': 'success', 'access_points': cached_result}), 200
 
-    try:
-        result = scan_access_points.apply(args=[DEVICE], throw=True).get()
-        if result == 'busy':
-            return jsonify({'status': 'busy'}), 200
-        if result == 'error':
-            return jsonify({'status': 'error'}), 200
-        cache.set('access_points', result, timeout=None)
-        return jsonify({'status': 'success', 'access_points': result}), 200
-    except Exception as e:
-        logging.error(f"Error during access points scan: {str(e)}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+    return jsonify({'status': 'success', 'access_points': 'no cache available'}), 200
 
 @app.route('/set_accesspoints', methods=['GET'])
 def set_accesspoints():
@@ -252,7 +251,7 @@ def set_accesspoints():
         if result == [] :
             return jsonify({'status': 'error'}), 200
         
-        cache.set('access_points', result, timeout=None)
+        cache.set('access_points', result)
         return jsonify({'status': 'success'}), 200
     except Exception as e:
         logging.error(f"Error during access points scan: {str(e)}")
