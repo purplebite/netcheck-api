@@ -5,7 +5,7 @@ NetCheck API is an simple network monitoring API. It's designed to be used in co
 ## Installation
 To run the container, use the following command:
 ```bash
-docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 --network host --restart=always purplebite/netcheck-api:latest
+docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e CRON_TIMEOUT=10 --network host --restart=always purplebite/netcheck-api:latest
 ```
 NetCheck API is now running on http://localhost:2025.
 
@@ -133,7 +133,7 @@ GET http://localhost:2025/speedtest?api_key=123456789
 
 An optional environment parameter for the Speedtest endpoint via docker is: SERVER_ID. With this parameter you can define which [server](https://www.google.com/search?q=How+to+find+a+Speedtest.net+server+ID) should be used for testing the internet bandwidth. Usage example:
 ```bash
-docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SERVER_ID=38461 --network host --restart=always purplebite/netcheck-api:latest
+docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SERVER_ID=38461 -e CRON_TIMEOUT=10 --network host --restart=always purplebite/netcheck-api:latest
 ```
 ## Notes
 
