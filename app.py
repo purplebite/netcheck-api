@@ -8,7 +8,7 @@ from celery import Celery
 from flask_caching import Cache
 # from ping3 import ping
 from multiprocessing import Lock
-
+import time
 
 
 app = Flask(__name__)
@@ -44,7 +44,7 @@ logging.basicConfig(
 
 def filter_access_points(access_points):
     try:
-        print("1 \n")
+        # print("1 \n")
         ssid_signal_map = {}
         filtered_access_points = []
         seen_ssids = set()
@@ -61,7 +61,7 @@ def filter_access_points(access_points):
             if ssid != "" and signal_strength == ssid_signal_map[ssid] and ssid not in seen_ssids:
                 filtered_access_points.append(ap)
                 seen_ssids.add(ssid)
-        print("1 \n")
+        # print("1 \n")
         return filtered_access_points
     except Exception as e:
         logging.error(str(e))
@@ -167,6 +167,7 @@ def scan_access_points(self, device):
             delay = initial_delay
             resource_busy_error_code = 16  # Error code for "Device or resource busy"
 
+
             for attempt in range(retries):
                 try:
                     result = subprocess.check_output(command, universal_newlines=True, shell=True, timeout=100)
@@ -176,7 +177,6 @@ def scan_access_points(self, device):
                     logging.error(f"Attempt {attempt + 1}: Command error: {error_message}")
                     if "Device or resource busy" in error_message:
                         logging.info(f"Attempt {attempt + 1}: Device or resource busy. Waiting before retrying.")
-                        return 'busy'
                     else:
                         return 'error'
                 except subprocess.TimeoutExpired as e:
@@ -189,6 +189,7 @@ def scan_access_points(self, device):
                     delay *= 2  # exponential backoff
                 else:
                     raise Exception(f"Failed to execute command after {retries} attempts")
+
 
     try:
         scan_result = run_scan()
