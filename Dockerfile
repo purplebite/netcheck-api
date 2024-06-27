@@ -10,7 +10,7 @@ ENV DEVICE="wlan0"
 ENV PORT=80
 ENV SERVER_ID=38461
 ENV DEBUG=False
-ENV CRON_TIMEOUT=30
+ENV SCAN_CRON=30
 ENV SERVERID=False
 
 COPY setup-cron.sh /usr/local/bin/setup-cron.sh
