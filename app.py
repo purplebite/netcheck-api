@@ -244,7 +244,23 @@ def set_accesspoints():
 
     
     try:
-        result = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        result1 = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        result2 = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        unique_dict = {}
+        if result1 != 'busy' or result1 != 'error' and result2 != 'busy' or result2 != 'error':
+            for d in result1 + result2:
+                unique_dict.update(d)
+        else:
+            if not  isinstance(result1, str):
+                result = result1
+            elif not  isinstance(result2, str):
+                result = result2
+            else:
+                result = []
+
+
+        # Convert the dictionary back to a list of dictionaries
+        result = [{k: v} for k, v in unique_dict.items()]
         if result == 'busy':
             return jsonify({'status': 'busy'}), 200
         if result == 'error':
