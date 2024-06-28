@@ -231,7 +231,7 @@ def access_points():
 
     cached_result = cache.get('access_points')
     print(cached_result)
-    if cached_result is not None :
+    if cached_result :
         return jsonify({'status': 'success', 'access_points': cached_result}), 200
 
     return jsonify({'status': 'success', 'access_points': 'no cache available'}), 200
@@ -275,8 +275,8 @@ def set_accesspoints():
             return jsonify({'status': 'error'}), 200
         if result == [] :
             return jsonify({'status': 'error'}), 200
-        
-        cache.set('access_points', result)
+        if result != 'error' and result == 'busy' and result != []:
+            cache.set('access_points', result)
         return jsonify({'status': 'success'}), 200
     except Exception as e:
         logging.error(f"Error during access points scan: {str(e)}")
