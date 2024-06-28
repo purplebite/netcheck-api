@@ -245,22 +245,30 @@ def set_accesspoints():
     
     try:
         result1 = scan_access_points.apply(args=[DEVICE], throw=True).get()
+        time.sleep(5)
         result2 = scan_access_points.apply(args=[DEVICE], throw=True).get()
         unique_dict = {}
-        if result1 != 'busy' or result1 != 'error' and result2 != 'busy' or result2 != 'error':
-            for d in result1 + result2:
-                unique_dict.update(d)
+        seen_ssids = set()
+        result=[]
+        
+        if result1 not in ['busy', 'error'] and result2 not in ['busy', 'error']:
+            for item in result1+result2:
+                ssid = item['SSID']
+                if ssid not in seen_ssids:
+                    seen_ssids.add(ssid)
+                    result.append(item)
         else:
-            if not  isinstance(result1, str):
+            # Handle cases where one of the results is an error or busy
+            if isinstance(result1, list):
                 result = result1
-            elif not  isinstance(result2, str):
+            elif isinstance(result2, list):
                 result = result2
             else:
                 result = []
 
 
         # Convert the dictionary back to a list of dictionaries
-        result = [{k: v} for k, v in unique_dict.items()]
+        # result = [{k: v} for k, v in unique_dict.items()]
         if result == 'busy':
             return jsonify({'status': 'busy'}), 200
         if result == 'error':
