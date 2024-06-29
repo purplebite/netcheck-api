@@ -232,7 +232,7 @@ def access_points():
         return jsonify({'error': 'Invalid API key'}), 401
 
     cached_result = cache.get('access_points')
-    print(cached_result)
+    # print(cached_result)
     if cached_result :
         return jsonify({'status': 'success', 'access_points': cached_result}), 200
 
@@ -268,12 +268,12 @@ def set_accesspoints():
             else:
                 result = []
 
-        print("--------------")
-        print(result1)
-        print("--------------")
-        print(result2)
-        print("--------------")
-        print(result2)
+        # print("--------------")
+        # print(result1)
+        # print("--------------")
+        # print(result2)
+        # print("--------------")
+        # print(result2)
         # Convert the dictionary back to a list of dictionaries
         # result = [{k: v} for k, v in unique_dict.items()]
         if result == 'busy':
