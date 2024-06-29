@@ -4,6 +4,11 @@ NetCheck API is an simple network monitoring API. It's designed to be used in co
 
 ## Installation
 To run the container, use the following command:
+
+```bash
+docker run -d --name redis -v redis_data:/data -p 6379:6379 redis:alpine
+```
+
 ```bash
 docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SCAN_CRON=10 --network host --restart=always purplebite/netcheck-api:latest
 ```
