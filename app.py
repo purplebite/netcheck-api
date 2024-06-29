@@ -236,7 +236,7 @@ def access_points():
     if cached_result :
         return jsonify({'status': 'success', 'access_points': cached_result}), 200
 
-    return jsonify({'status': 'success', 'access_points': 'no cache available'}), 200
+    return jsonify({'status': 'error', 'access_points': 'no cache available'}), 200
 
 @app.route('/set_accesspoints', methods=['GET'])
 def set_accesspoints():
