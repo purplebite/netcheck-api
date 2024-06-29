@@ -266,7 +266,12 @@ def set_accesspoints():
             else:
                 result = []
 
-
+        print("--------------")
+        print(result1)
+        print("--------------")
+        print(result2)
+        print("--------------")
+        print(result2)
         # Convert the dictionary back to a list of dictionaries
         # result = [{k: v} for k, v in unique_dict.items()]
         if result == 'busy':
@@ -275,7 +280,7 @@ def set_accesspoints():
             return jsonify({'status': 'error'}), 200
         if result == [] :
             return jsonify({'status': 'error'}), 200
-        if result != 'error' and result == 'busy' and result != []:
+        if result != 'error' and result != 'busy' and result != [] and result != None:
             cache.set('access_points', result)
         return jsonify({'status': 'success'}), 200
     except Exception as e:
