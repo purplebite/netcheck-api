@@ -12,14 +12,16 @@ import time
 
 
 app = Flask(__name__)
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERY_BROKER_URL'] = 'redis://172.17.0.1:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://172.17.0.1:6379/0'
+
 
 app.config['CACHE_TYPE'] = 'RedisCache'
-app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_HOST'] = '172.17.0.1'
 app.config['CACHE_REDIS_PORT'] = 6379
 app.config['CACHE_REDIS_DB'] = 0
-app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
+app.config['CACHE_REDIS_URL'] = 'redis://172.17.0.1:6379/0'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 0 
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
