@@ -3,7 +3,7 @@
 NetCheck API is an simple network monitoring API. It's designed to be used in combination with a monitoring tool. The Docker container exposes endpoints to ping IP addresses, conduct TCP port scans and check available access points. Secure the exposed port and start checking the status of your (local) network.
 
 ## Installation
-To run the container, use the following command:
+To setup NetCheck API, use the following commands:
 
 ```bash
 docker run -d --name redis -v redis_data:/data -p 6379:6379 redis:alpine
@@ -12,7 +12,7 @@ docker run -d --name redis -v redis_data:/data -p 6379:6379 redis:alpine
 ```bash
 docker run --privileged -d -e PORT=2025 -e API_KEY=123456789 -e DEVICE=wlan0 -e SCAN_CRON=10 --network host --restart=always purplebite/netcheck-api:latest
 ```
-NetCheck API is now running on http://localhost:2025.
+NetCheck API is now running on http://localhost:2025 and uses Redis for persistent data storage.
 
 - If the API key is not specified during container startup no API key is required.
 - If the DEVICE variable is not passed during container startup, the default value is set to wlan0. If you're unsure about the device name, you can use the `ifconfig` command to find the name of the WiFi interface. To install use `sudo apt install net-tools` .
