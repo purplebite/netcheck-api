@@ -1,0 +1,8 @@
+venv
+mycmd.md
+test.ipynb
+*.md
+*.bash
+test.sh
+__pycache__/
+*.pyc
